@@ -6,7 +6,13 @@ import { serve } from 'std/server'
 import { createClient } from '@supabase/supabase-js'
 import { OpenAI, ChatCompletionOptions } from 'openai'
 
+import { corsHeaders } from '../_shared/cors.ts'
+
 serve(async (req: Request) => {
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders })
+  }
+
   try {
     const { method } = req
     if (method === 'POST') {
@@ -14,12 +20,12 @@ serve(async (req: Request) => {
       let messages = []
       try {
         body = await req.json()
-        if(body.messages && Array.isArray(body.messages)) {
+        if (body.messages && Array.isArray(body.messages)) {
           messages = body.messages
         } else {
           return new Response(
             JSON.stringify({ status: 400, error: 'messages has to be an Array' }),
-            { headers: { "Content-Type": "application/json" }, status: 400 }
+            { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
           )
         }
       } catch (_error) {
@@ -41,13 +47,13 @@ serve(async (req: Request) => {
       if (error) {
         return new Response(
           JSON.stringify({ status: 500, error }),
-          { headers: { "Content-Type": "application/json" }, status: 500 }
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
         )
       }
       if (!questionnaires[0]) {
         return new Response(
           JSON.stringify({ status: 503, error: 'There is not questionnaires' }),
-          { headers: { "Content-Type": "application/json" }, status: 503 }
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 503 }
         )
       }
       const options: ChatCompletionOptions = {
@@ -80,17 +86,17 @@ Remember, as Karla, you are mental health companion a powerful tool for deliveri
 
       return new Response(
         JSON.stringify(response),
-        { headers: { "Content-Type": "application/json" } }
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       )
     }
     return new Response(
       JSON.stringify({ status: 404, error: 'Resorce not found' }),
-      { headers: { "Content-Type": "application/json" }, status: 404 }
+      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 404 }
     )
   } catch (error) {
     return new Response(
       JSON.stringify({ status: 500, error: error }),
-      { headers: { "Content-Type": "application/json" }, status: 500 }
+      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
     )
   }
 })
